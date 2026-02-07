@@ -46,3 +46,37 @@ export async function createMessage(sessionId: string, content: string, role: 'u
 
     return { id, sessionId, content, role, createdAt: now };
 }
+
+export async function updateSession(id: string, title: string) {
+    const now = new Date();
+
+    await db
+        .update(sessions)
+        .set({
+            title,
+            updatedAt: now
+        })
+        .where(eq(sessions.id, id));
+
+    return { id, title, updatedAt: now };
+}
+
+export async function deleteSession(id: string) {
+    await db.delete(sessions).where(eq(sessions.id, id));
+}
+
+export async function deleteMessage(id: string) {
+    await db.delete(messages).where(eq(messages.id, id));
+}
+
+export async function getSessionWithMessages(id: string) {
+    const session = await getSession(id);
+    if (!session) return null;
+
+    const sessionMessages = await getMessages(id);
+
+    return {
+        ...session,
+        messages: sessionMessages
+    };
+}
