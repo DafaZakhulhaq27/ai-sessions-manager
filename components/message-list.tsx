@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { Message } from '@/lib/schema';
+import { MessageDTO } from '@/src/application/dtos';
 import { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 interface MessageListProps {
-    messages: Message[];
+    messages: MessageDTO[];
 }
 
 export default function MessageList({ messages }: MessageListProps) {

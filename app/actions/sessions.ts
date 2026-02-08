@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createSession } from '@/lib/data';
+import { createSessionUseCase } from '@/src/di';
 
 export async function createNewSession(_prevState: { error?: string; success?: boolean; session?: any } | null, formData: FormData) {
     try {
@@ -11,13 +11,20 @@ export async function createNewSession(_prevState: { error?: string; success?: b
             return { error: 'Title is required and must be a string' };
         }
 
-        const session = await createSession(title.trim());
+        const session = await createSessionUseCase.execute(title.trim());
 
         // Revalidate the sessions list to update the UI
         revalidatePath('/');
 
-        // Return the session data instead of redirecting
-        return { success: true, session };
+        // Return the session data (DTO)
+        const sessionDto = {
+            id: session.id,
+            title: session.title,
+            createdAt: session.createdAt,
+            updatedAt: session.updatedAt
+        };
+
+        return { success: true, session: sessionDto };
     } catch (error) {
         console.error('Error creating session:', error);
         return { error: 'Failed to create session' };

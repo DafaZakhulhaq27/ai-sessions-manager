@@ -1,4 +1,5 @@
-import { getSessionWithMessages } from '@/lib/data';
+import { getSessionUseCase } from '@/src/di';
+import { SessionDTO } from '@/src/application/dtos';
 import { notFound } from 'next/navigation';
 import MessageList from '@/components/message-list';
 import MessageInput from '@/components/message-input';
@@ -10,11 +11,25 @@ export default async function SessionPage({
     params: Promise<{ id: string }>
 }) {
     const { id } = await params;
-    const sessionWithMessages = await getSessionWithMessages(id);
+    const session = await getSessionUseCase.execute(id);
 
-    if (!sessionWithMessages) {
+    if (!session) {
         notFound();
     }
+
+    const sessionWithMessages: SessionDTO = {
+        id: session.id,
+        title: session.title,
+        createdAt: session.createdAt,
+        updatedAt: session.updatedAt,
+        messages: session.messages.map(m => ({
+            id: m.id,
+            sessionId: m.sessionId,
+            content: m.content,
+            role: m.role,
+            createdAt: m.createdAt
+        }))
+    };
 
     return (
         <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
@@ -29,7 +44,7 @@ export default async function SessionPage({
                     <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100 flex-shrink-0">
                         Messages
                     </h2>
-                    <MessageList messages={sessionWithMessages.messages} />
+                    <MessageList messages={sessionWithMessages.messages || []} />
                 </div>
 
                 <div className="flex-shrink-0">

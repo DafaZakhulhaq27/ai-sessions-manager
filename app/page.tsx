@@ -1,10 +1,17 @@
-import { getSessions } from '@/lib/data';
+import { getSessionListUseCase } from '@/src/di';
 import SessionCard from '@/components/session-card';
 import NewSessionModal from '@/components/new-session-modal';
 import Header from '@/components/header';
+import { SessionDTO } from '@/src/application/dtos';
 
 export default async function HomePage() {
-  const sessions = await getSessions();
+  const sessions = await getSessionListUseCase.execute();
+  const serializedSessions: SessionDTO[] = sessions.map(s => ({
+    id: s.id,
+    title: s.title,
+    createdAt: s.createdAt,
+    updatedAt: s.updatedAt
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -20,7 +27,7 @@ export default async function HomePage() {
           </p>
         </div>
 
-        {sessions.length === 0 ? (
+        {serializedSessions.length === 0 ? (
           <div className="text-center py-12">
             <svg
               className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600"
@@ -46,7 +53,7 @@ export default async function HomePage() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {sessions.map((session) => (
+            {serializedSessions.map((session) => (
               <SessionCard key={session.id} session={session} />
             ))}
           </div>

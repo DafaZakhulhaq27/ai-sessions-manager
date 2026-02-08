@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { Session } from '@/lib/schema';
+import { SessionDTO } from '@/src/application/dtos';
 
 interface SessionCardProps {
-    session: Session;
+    session: SessionDTO;
 }
 
 export default function SessionCard({ session }: SessionCardProps) {
