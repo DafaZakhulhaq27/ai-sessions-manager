@@ -41,9 +41,12 @@ export class SendMessageUseCase {
 
             } catch (error) {
                 console.error("Failed to generate AI response:", error);
-                // We could add a system message or error message here if we wanted
-                // For now, valid requirement is just "mock API delay/failure", we handled the failure by logging.
-                // The user message is already saved.
+                // Add an error message to the conversation to inform the user
+                const errorMessage = Message.create(sessionId, "Sorry, I couldn't generate a response. Please try again later.", 'assistant');
+                session.addMessage(errorMessage);
+                await this.sessionRepository.save(session);
+
+                // Don't throw an error, just log it since we've added an error message to the chat
             }
         }
     }
