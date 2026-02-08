@@ -67,14 +67,17 @@ describe('SendMessageUseCase', () => {
 
         await sendMessageUseCase.execute(sessionId, userContent, true);
 
-        // Verify user message added
-        expect(existingSession.messages.length).toBe(1); // Only User
+        // Verify user message and error message added
+        expect(existingSession.messages.length).toBe(2); // User + Error message
         expect(existingSession.messages[0].content).toBe(userContent);
+        expect(existingSession.messages[0].role).toBe('user');
 
-        // Verify persistence (saved once for user msg)
-        expect(mockSessionRepository.save).toHaveBeenCalledTimes(1);
+        // Verify error message was added
+        expect(existingSession.messages[1].content).toBe("Sorry, I couldn't generate a response. Please try again later.");
+        expect(existingSession.messages[1].role).toBe('assistant');
 
-        // Verify console.error was likely called (we can mock console.error if we want strict check)
+        // Verify persistence (saved twice: once for user msg, once for error msg)
+        expect(mockSessionRepository.save).toHaveBeenCalledTimes(2);
     });
 
     it('should throw error if session not found', async () => {
