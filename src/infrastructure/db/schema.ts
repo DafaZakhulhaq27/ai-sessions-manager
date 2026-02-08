@@ -1,18 +1,18 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
-export const sessions = sqliteTable('sessions', {
+export const sessions = pgTable('sessions', {
     id: text('id').primaryKey(),
     title: text('title').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const messages = sqliteTable('messages', {
+export const messages = pgTable('messages', {
     id: text('id').primaryKey(),
     sessionId: text('session_id').notNull().references(() => sessions.id, { onDelete: 'cascade' }),
     content: text('content').notNull(),
     role: text('role').notNull(), // 'user' | 'assistant'
-    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 export type Session = typeof sessions.$inferSelect;

@@ -1,17 +1,16 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import * as schema from './schema';
-import path from 'path';
-import fs from 'fs';
 
-// Use DATABASE_URL or default to dev.db in the current directory
-const dbPath = process.env.DATABASE_URL || path.resolve(process.cwd(), 'dev.db');
+// Use DATABASE_URL for Supabase connection
+const connectionString = process.env.DATABASE_URL;
 
-// Ensure the database directory exists
-const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
+if (!connectionString) {
+    throw new Error('DATABASE_URL is not set');
 }
 
-const sqlite = new Database(dbPath);
-export const db = drizzle(sqlite, { schema });
+// Create postgres pool
+const pool = new Pool({
+    connectionString,
+});
+export const db = drizzle(pool, { schema });

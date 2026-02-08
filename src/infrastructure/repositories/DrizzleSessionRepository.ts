@@ -9,9 +9,9 @@ import { eq, desc } from 'drizzle-orm';
 export class DrizzleSessionRepository implements ISessionRepository {
     async save(session: Session): Promise<void> {
         // Check if session exists
-        const existing = await db.select().from(sessions).where(eq(sessions.id, session.id)).get();
+        const existing = await db.select().from(sessions).where(eq(sessions.id, session.id)).limit(1);
 
-        if (existing) {
+        if (existing.length > 0) {
             await db.update(sessions).set({
                 title: session.title,
                 updatedAt: session.updatedAt
@@ -29,8 +29,8 @@ export class DrizzleSessionRepository implements ISessionRepository {
         // In a real app, we might valid checking existence or useupsert
         // For now, let's just insert messages that don't exist
         for (const msg of session.messages) {
-            const existingMsg = await db.select().from(messages).where(eq(messages.id, msg.id)).get();
-            if (!existingMsg) {
+            const existingMsg = await db.select().from(messages).where(eq(messages.id, msg.id)).limit(1);
+            if (existingMsg.length === 0) {
                 await db.insert(messages).values({
                     id: msg.id,
                     sessionId: session.id,
@@ -43,7 +43,8 @@ export class DrizzleSessionRepository implements ISessionRepository {
     }
 
     async findById(id: string): Promise<Session | null> {
-        const sessionRecord = await db.select().from(sessions).where(eq(sessions.id, id)).get();
+        const sessionRecords = await db.select().from(sessions).where(eq(sessions.id, id)).limit(1);
+        const sessionRecord = sessionRecords[0];
         if (!sessionRecord) return null;
 
         const messageRecords = await db.select()
