@@ -8,7 +8,9 @@ Check out the live application: [https://ai-sessions-manager-l1y5.vercel.app/](h
 
 ## 📹 Video Demo
 
-[Coming Soon] - Video demonstration of the application features and usage.
+
+https://github.com/user-attachments/assets/b66ed34b-1d8c-40c4-a4ef-cd7fd094bf48
+
 
 ## 🛠️ Tech Stack
 
