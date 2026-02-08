@@ -1,50 +1,66 @@
-import Image from "next/image";
+import { getSessions } from '@/lib/data';
+import SessionCard from '@/components/session-card';
+import NewSessionModal from '@/components/new-session-modal';
+import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
 
-export default function Home() {
+export default async function HomePage() {
+  const sessions = await getSessions();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            AI Sessions Manager with Sentry Integration
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            AI Sessions Manager
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Error handling system has been successfully integrated with Sentry for comprehensive monitoring and reporting.
+          <div className="flex items-center space-x-4">
+            <DarkModeToggle />
+            <NewSessionModal />
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            Your Sessions
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Manage your AI conversation sessions
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+
+        {sessions.length === 0 ? (
+          <div className="text-center py-12">
+            <svg
+              className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              No sessions yet
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Create your first AI conversation session to get started
+            </p>
+            <NewSessionModal />
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {sessions.map((session) => (
+              <SessionCard key={session.id} session={session} />
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

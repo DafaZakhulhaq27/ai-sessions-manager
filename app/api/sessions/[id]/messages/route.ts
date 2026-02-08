@@ -34,7 +34,7 @@ export async function POST(
 ) {
     try {
         const { id } = await params;
-        const { content, generateAIResponse } = await request.json();
+        const { content, role, generateAIResponse } = await request.json();
 
         if (!content || typeof content !== 'string') {
             return NextResponse.json(
@@ -42,6 +42,9 @@ export async function POST(
                 { status: 400 }
             );
         }
+
+        // Default to 'user' role if not provided
+        const messageRole = role || 'user';
 
         const session = await getSession(id);
         if (!session) {
@@ -51,8 +54,8 @@ export async function POST(
             );
         }
 
-        // Save user message
-        const userMessage = await createMessage(id, content, 'user');
+        // Save message with the provided role
+        const message = await createMessage(id, content, messageRole);
 
         // If AI response is requested, generate and save it
         let aiMessage = null;
@@ -76,7 +79,7 @@ export async function POST(
         }
 
         return NextResponse.json({
-            userMessage,
+            message,
             aiMessage
         }, { status: 201 });
     } catch (error) {

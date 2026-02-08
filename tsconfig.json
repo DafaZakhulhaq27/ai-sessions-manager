@@ -17,7 +17,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": ["jest"],
+    "types": ["jest", "./types/css.d.ts"],
     "plugins": [
       {
         "name": "next"
@@ -35,7 +35,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    "types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules"
