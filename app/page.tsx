@@ -1,24 +1,14 @@
 import { getSessions } from '@/lib/data';
 import SessionCard from '@/components/session-card';
 import NewSessionModal from '@/components/new-session-modal';
-import { DarkModeToggle } from '@/components/ui/dark-mode-toggle';
+import Header from '@/components/header';
 
 export default async function HomePage() {
   const sessions = await getSessions();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            AI Sessions Manager
-          </h1>
-          <div className="flex items-center space-x-4">
-            <DarkModeToggle />
-            <NewSessionModal />
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">

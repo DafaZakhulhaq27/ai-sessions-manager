@@ -1,43 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useActionState, startTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createNewSession } from '@/app/actions/sessions';
 
 export default function NewSessionModal() {
     const [isOpen, setIsOpen] = useState(false);
     const [title, setTitle] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
+    const [state, action, pending] = useActionState(createNewSession, null);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!title.trim()) return;
 
-        setIsLoading(true);
+        const formData = new FormData();
+        formData.append('title', title.trim());
 
-        try {
-            const response = await fetch('/api/sessions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    title: title.trim(),
-                }),
-            });
-
-            if (response.ok) {
-                const session = await response.json();
-                setIsOpen(false);
-                setTitle('');
-                router.push(`/${session.id}`);
-            }
-        } catch (error) {
-            console.error('Error creating session:', error);
-        } finally {
-            setIsLoading(false);
-        }
+        startTransition(() => {
+            action(formData);
+        });
     };
+
+    // Handle navigation when the action is successful
+    useEffect(() => {
+        if (state?.success && state.session) {
+            setIsOpen(false);
+            setTitle('');
+            router.push(`/${state.session.id}`);
+        }
+    }, [state, router]);
 
     return (
         <>
@@ -49,7 +41,7 @@ export default function NewSessionModal() {
             </button>
 
             {isOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 w-full max-w-md mx-4">
                         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                             Create New Session
@@ -72,6 +64,12 @@ export default function NewSessionModal() {
                                 />
                             </div>
 
+                            {state?.error && (
+                                <div className="text-red-600 dark:text-red-400 text-sm">
+                                    {state.error}
+                                </div>
+                            )}
+
                             <div className="flex justify-end space-x-3">
                                 <button
                                     type="button"
@@ -85,10 +83,10 @@ export default function NewSessionModal() {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={isLoading || !title.trim()}
+                                    disabled={pending || !title.trim()}
                                     className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                 >
-                                    {isLoading ? 'Creating...' : 'Create'}
+                                    {pending ? 'Creating...' : 'Create'}
                                 </button>
                             </div>
                         </form>

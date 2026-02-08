@@ -1,171 +1,185 @@
-import {
-    getSessions,
-    getSession,
-    getMessages,
-    createSession,
-    createMessage,
-    updateSession,
-    deleteSession,
-    deleteMessage,
-    getSessionWithMessages,
-    getMessage,
-    updateMessage,
-    deleteMessagesBySessionId,
-    getSessionCount,
-    getMessageCount,
-    getRecentSessions,
-    searchSessions,
-    searchMessages
-} from '@/lib/data';
+import * as data from '@/lib/data';
+import { db } from '@/lib/db';
+import { sessions, messages } from '@/lib/schema';
+import { eq } from 'drizzle-orm';
 
-// Mock the database module
+// Mock the database
 jest.mock('@/lib/db', () => ({
     db: {
         select: jest.fn(),
-        from: jest.fn(),
-        where: jest.fn(),
-        orderBy: jest.fn(),
-        limit: jest.fn(),
         insert: jest.fn(),
-        values: jest.fn(),
         update: jest.fn(),
-        set: jest.fn(),
         delete: jest.fn(),
     }
 }));
 
-// Get the mocked db instance
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { db } = require('@/lib/db');
-
-describe('Data Access Layer', () => {
+describe('Data Library', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    describe('Session Functions', () => {
-        it('getSessions should be defined', () => {
-            expect(getSessions).toBeDefined();
-            expect(typeof getSessions).toBe('function');
-        });
+    describe('getSessions', () => {
+        it('should return all sessions ordered by updatedAt', async () => {
+            const mockSessions = [{ id: '1', title: 'Session 1' }];
+            const mockOrderBy = jest.fn().mockResolvedValue(mockSessions);
+            const mockFrom = jest.fn().mockReturnValue({ orderBy: mockOrderBy });
+            (db.select as jest.Mock).mockReturnValue({ from: mockFrom });
 
-        it('getSession should be defined', () => {
-            expect(getSession).toBeDefined();
-            expect(typeof getSession).toBe('function');
-        });
+            const result = await data.getSessions();
 
-        it('createSession should be defined', () => {
-            expect(createSession).toBeDefined();
-            expect(typeof createSession).toBe('function');
-        });
-
-        it('updateSession should be defined', () => {
-            expect(updateSession).toBeDefined();
-            expect(typeof updateSession).toBe('function');
-        });
-
-        it('deleteSession should be defined', () => {
-            expect(deleteSession).toBeDefined();
-            expect(typeof deleteSession).toBe('function');
+            expect(result).toEqual(mockSessions);
+            expect(db.select).toHaveBeenCalled();
+            expect(mockFrom).toHaveBeenCalledWith(sessions);
         });
     });
 
-    describe('Message Functions', () => {
-        it('getMessages should be defined', () => {
-            expect(getMessages).toBeDefined();
-            expect(typeof getMessages).toBe('function');
+    describe('getSession', () => {
+        it('should return a single session by id', async () => {
+            const mockSession = { id: '1', title: 'Session 1' };
+            const mockLimit = jest.fn().mockResolvedValue([mockSession]);
+            const mockWhere = jest.fn().mockReturnValue({ limit: mockLimit });
+            const mockFrom = jest.fn().mockReturnValue({ where: mockWhere });
+            (db.select as jest.Mock).mockReturnValue({ from: mockFrom });
+
+            const result = await data.getSession('1');
+
+            expect(result).toEqual(mockSession);
+            expect(mockWhere).toHaveBeenCalled();
         });
 
-        it('getMessage should be defined', () => {
-            expect(getMessage).toBeDefined();
-            expect(typeof getMessage).toBe('function');
-        });
+        it('should return null if session not found', async () => {
+            const mockLimit = jest.fn().mockResolvedValue([]);
+            const mockWhere = jest.fn().mockReturnValue({ limit: mockLimit });
+            const mockFrom = jest.fn().mockReturnValue({ where: mockWhere });
+            (db.select as jest.Mock).mockReturnValue({ from: mockFrom });
 
-        it('createMessage should be defined', () => {
-            expect(createMessage).toBeDefined();
-            expect(typeof createMessage).toBe('function');
-        });
+            const result = await data.getSession('non-existent');
 
-        it('updateMessage should be defined', () => {
-            expect(updateMessage).toBeDefined();
-            expect(typeof updateMessage).toBe('function');
-        });
-
-        it('deleteMessage should be defined', () => {
-            expect(deleteMessage).toBeDefined();
-            expect(typeof deleteMessage).toBe('function');
-        });
-
-        it('deleteMessagesBySessionId should be defined', () => {
-            expect(deleteMessagesBySessionId).toBeDefined();
-            expect(typeof deleteMessagesBySessionId).toBe('function');
+            expect(result).toBeNull();
         });
     });
 
-    describe('Utility Functions', () => {
-        it('getSessionWithMessages should be defined', () => {
-            expect(getSessionWithMessages).toBeDefined();
-            expect(typeof getSessionWithMessages).toBe('function');
-        });
+    describe('createSession', () => {
+        it('should insert a new session and return it', async () => {
+            const mockValues = jest.fn().mockResolvedValue({});
+            (db.insert as jest.Mock).mockReturnValue({ values: mockValues });
 
-        it('getSessionCount should be defined', () => {
-            expect(getSessionCount).toBeDefined();
-            expect(typeof getSessionCount).toBe('function');
-        });
+            const title = 'New Session';
+            const result = await data.createSession(title);
 
-        it('getMessageCount should be defined', () => {
-            expect(getMessageCount).toBeDefined();
-            expect(typeof getMessageCount).toBe('function');
-        });
-
-        it('getRecentSessions should be defined', () => {
-            expect(getRecentSessions).toBeDefined();
-            expect(typeof getRecentSessions).toBe('function');
-        });
-
-        it('searchSessions should be defined', () => {
-            expect(searchSessions).toBeDefined();
-            expect(typeof searchSessions).toBe('function');
-        });
-
-        it('searchMessages should be defined', () => {
-            expect(searchMessages).toBeDefined();
-            expect(typeof searchMessages).toBe('function');
+            expect(result.title).toBe(title);
+            expect(result.id).toBeDefined();
+            expect(db.insert).toHaveBeenCalledWith(sessions);
+            expect(mockValues).toHaveBeenCalled();
         });
     });
 
-    describe('Function Behavior', () => {
-        it('createSession should generate an ID and timestamps', () => {
-            // Mock the database insert to resolve immediately
-            db.insert.mockReturnValue({
-                values: jest.fn().mockResolvedValue(undefined)
-            });
+    describe('createMessage', () => {
+        it('should insert a new message and return it', async () => {
+            const mockValues = jest.fn().mockResolvedValue({});
+            (db.insert as jest.Mock).mockReturnValue({ values: mockValues });
 
-            const result = createSession('Test Session');
+            const sessionId = 'session-1';
+            const content = 'Hello AI';
+            const role = 'user';
 
-            return result.then(session => {
-                expect(session.id).toBeDefined();
-                expect(session.title).toBe('Test Session');
-                expect(session.createdAt).toBeInstanceOf(Date);
-                expect(session.updatedAt).toBeInstanceOf(Date);
-            });
+            const result = await data.createMessage(sessionId, content, role);
+
+            expect(result.sessionId).toBe(sessionId);
+            expect(result.content).toBe(content);
+            expect(result.role).toBe(role);
+            expect(db.insert).toHaveBeenCalledWith(messages);
+        });
+    });
+
+    describe('updateSession', () => {
+        it('should update session title and return updated data', async () => {
+            const mockWhere = jest.fn().mockResolvedValue({});
+            const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
+            (db.update as jest.Mock).mockReturnValue({ set: mockSet });
+
+            const id = '1';
+            const newTitle = 'Updated Title';
+            const result = await data.updateSession(id, newTitle);
+
+            expect(result.id).toBe(id);
+            expect(result.title).toBe(newTitle);
+            expect(db.update).toHaveBeenCalledWith(sessions);
+            expect(mockSet).toHaveBeenCalledWith(expect.objectContaining({ title: newTitle }));
+        });
+    });
+
+    describe('getSessionWithMessages', () => {
+        it('should return session with all its messages', async () => {
+            const mockSession = { id: 's1', title: 'Session 1' };
+            const mockMessages = [{ id: 'm1', sessionId: 's1', content: 'Hi' }];
+
+            // Mock getSession
+            const mockLimit = jest.fn().mockResolvedValue([mockSession]);
+            const mockWhereS = jest.fn().mockReturnValue({ limit: mockLimit });
+            const mockFromS = jest.fn().mockReturnValue({ where: mockWhereS });
+
+            // Mock getMessages
+            const mockOrderBy = jest.fn().mockResolvedValue(mockMessages);
+            const mockWhereM = jest.fn().mockReturnValue({ orderBy: mockOrderBy });
+            const mockFromM = jest.fn().mockReturnValue({ where: mockWhereM });
+
+            (db.select as jest.Mock)
+                .mockReturnValueOnce({ from: mockFromS }) // for getSession
+                .mockReturnValueOnce({ from: mockFromM }); // for getMessages
+
+            const result = await data.getSessionWithMessages('s1');
+
+            expect(result).toEqual({ ...mockSession, messages: mockMessages });
         });
 
-        it('createMessage should generate an ID and timestamp', () => {
-            // Mock the database insert to resolve immediately
-            db.insert.mockReturnValue({
-                values: jest.fn().mockResolvedValue(undefined)
-            });
+        it('should return null if session does not exist', async () => {
+            const mockLimit = jest.fn().mockResolvedValue([]);
+            const mockWhere = jest.fn().mockReturnValue({ limit: mockLimit });
+            const mockFrom = jest.fn().mockReturnValue({ where: mockWhere });
+            (db.select as jest.Mock).mockReturnValue({ from: mockFrom });
 
-            const result = createMessage('session-1', 'Hello', 'user');
+            const result = await data.getSessionWithMessages('none');
 
-            return result.then(message => {
-                expect(message.id).toBeDefined();
-                expect(message.sessionId).toBe('session-1');
-                expect(message.content).toBe('Hello');
-                expect(message.role).toBe('user');
-                expect(message.createdAt).toBeInstanceOf(Date);
-            });
+            expect(result).toBeNull();
+        });
+    });
+
+    describe('searchSessions', () => {
+        it('should return filtered sessions based on query', async () => {
+            const mockSessions = [{ id: '1', title: 'Test result' }];
+            const mockOrderBy = jest.fn().mockResolvedValue(mockSessions);
+            const mockWhere = jest.fn().mockReturnValue({ orderBy: mockOrderBy });
+            const mockFrom = jest.fn().mockReturnValue({ where: mockWhere });
+            (db.select as jest.Mock).mockReturnValue({ from: mockFrom });
+
+            const result = await data.searchSessions('test');
+
+            expect(result).toEqual(mockSessions);
+        });
+    });
+
+    describe('deleteSession', () => {
+        it('should delete a session by id', async () => {
+            const mockWhere = jest.fn().mockResolvedValue({});
+            (db.delete as jest.Mock).mockReturnValue({ where: mockWhere });
+
+            await data.deleteSession('1');
+
+            expect(db.delete).toHaveBeenCalledWith(sessions);
+            expect(mockWhere).toHaveBeenCalled();
+        });
+    });
+
+    describe('deleteMessage', () => {
+        it('should delete a message by id', async () => {
+            const mockWhere = jest.fn().mockResolvedValue({});
+            (db.delete as jest.Mock).mockReturnValue({ where: mockWhere });
+
+            await data.deleteMessage('101');
+
+            expect(db.delete).toHaveBeenCalledWith(messages);
+            expect(mockWhere).toHaveBeenCalled();
         });
     });
 });

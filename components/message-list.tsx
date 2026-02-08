@@ -1,10 +1,25 @@
+'use client';
+
 import { Message } from '@/lib/schema';
+import { useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface MessageListProps {
     messages: Message[];
 }
 
 export default function MessageList({ messages }: MessageListProps) {
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
     if (messages.length === 0) {
         return (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
@@ -28,7 +43,7 @@ export default function MessageList({ messages }: MessageListProps) {
     }
 
     return (
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 p-2">
             {messages.map((message) => (
                 <div
                     key={message.id}
@@ -36,23 +51,28 @@ export default function MessageList({ messages }: MessageListProps) {
                         }`}
                 >
                     <div
-                        className={`max-w-[80%] px-4 py-3 rounded-lg ${message.role === 'user'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                        className={`max-w-[85%] px-4 py-3 rounded-lg ${message.role === 'user'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
                             }`}
                     >
-                        <div className="flex items-center mb-1">
-                            <span className="text-xs font-medium opacity-75">
+                        <div className="flex items-center mb-2 border-b border-black/5 dark:border-white/5 pb-1">
+                            <span className="text-[10px] uppercase tracking-wider font-bold opacity-70">
                                 {message.role === 'user' ? 'You' : 'AI Assistant'}
                             </span>
-                            <span className="text-xs opacity-50 ml-2">
-                                {message.createdAt.toLocaleString()}
+                            <span className="text-[10px] opacity-40 ml-2">
+                                {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                         </div>
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <div className={`text-sm leading-relaxed prose prose-sm max-w-none ${message.role === 'user' ? 'prose-invert' : 'dark:prose-invert'}`}>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {message.content}
+                            </ReactMarkdown>
+                        </div>
                     </div>
                 </div>
             ))}
+            <div ref={messagesEndRef} />
         </div>
     );
 }
