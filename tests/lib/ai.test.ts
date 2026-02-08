@@ -2,15 +2,19 @@ import { GeminiService, geminiService, createGeminiService } from '@/lib/ai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Mock the GoogleGenerativeAI module
+const mockGenerateContent = jest.fn().mockResolvedValue({
+    response: {
+        text: jest.fn().mockReturnValue('Mock AI response')
+    }
+});
+
+const mockGetGenerativeModel = jest.fn().mockReturnValue({
+    generateContent: mockGenerateContent
+});
+
 jest.mock('@google/generative-ai', () => ({
     GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
-        getGenerativeModel: jest.fn().mockReturnValue({
-            generateContent: jest.fn().mockResolvedValue({
-                response: {
-                    text: jest.fn().mockReturnValue('Mock AI response')
-                }
-            })
-        })
+        getGenerativeModel: mockGetGenerativeModel
     }))
 }));
 
